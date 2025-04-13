@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Проверка среды выполнения
     const isTelegram = typeof window.Telegram !== 'undefined' && window.Telegram.WebApp;
     const tg = isTelegram ? window.Telegram.WebApp : null;
+    console.log('App initialized'); // Должно появиться в консоли
 
+    
     // Получаем элементы DOM
     const elements = {
         levelModal: document.getElementById('levelModal'),
