@@ -1,4 +1,7 @@
 // Конфигурация игры
+const isTelegram = typeof window.Telegram !== 'undefined' && window.Telegram.WebApp;
+const tg = isTelegram ? window.Telegram.WebApp : null;
+
 const gameConfig = {
     words: {
         grade5: [
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tg = isTelegram ? window.Telegram.WebApp : null;
     console.log('App initialized'); // Должно появиться в консоли
 
-    
+
     // Получаем элементы DOM
     const elements = {
         levelModal: document.getElementById('levelModal'),
