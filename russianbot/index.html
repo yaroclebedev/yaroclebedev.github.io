@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Игра "Найди ошибку"</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .word-display {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            margin: 10px 0;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="score">Счет: <span id="score">0</span></div>
+        <div class="word-display" id="wordDisplay"></div>
+        
+        <input type="text" id="answerInput" placeholder="Введите правильный вариант">
+        <button onclick="checkAnswer()">Проверить</button>
+        
+        <div class="controls">
+            <button onclick="showAnswer()">Показать ответ</button>
+            <button onclick="exitGame()">Выйти</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Раскрыть на весь экран
+
+        // Данные игры
+        const words = {
+            grade5: [
+                { wrong: "програма", correct: "программа" },
+                { wrong: "искуство", correct: "искусство" }
+            ],
+            grade6: [
+                { wrong: "симетрия", correct: "симметрия" },
+                { wrong: "аккумулировать", correct: "аккумулировать" }
+            ]
+        };
+
+        // Состояние игры
+        let gameState = {
+            currentGrade: null,
+            currentWord: null,
+            attempts: 0,
+            score: 0
+        };
+
+        // Инициализация игры
+        function initGame(grade) {
+            gameState.currentGrade = grade;
+            gameState.score = 0;
+            updateScoreDisplay();
+            loadNewWord();
+        }
+
+        // Загрузка нового слова
+        function loadNewWord() {
+            const wordsList = words[gameState.currentGrade];
+            gameState.currentWord = wordsList[Math.floor(Math.random() * wordsList.length)];
+            gameState.attempts = 0;
+            
+            document.getElementById('wordDisplay').textContent = gameState.currentWord.wrong;
+            document.getElementById('answerInput').value = '';
+        }
+
+        // Проверка ответа
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = gameState.currentWord.correct.toLowerCase();
+
+            if(userAnswer === correctAnswer) {
+                gameState.score++;
+                updateScoreDisplay();
+                showMessage('Правильно! +1 балл', 'success');
+                loadNewWord();
+            } else {
+                gameState.attempts++;
+                
+                if(gameState.attempts >= 2) {
+                    showAnswer();
+                    loadNewWord();
+                } else {
+                    showMessage('Неверно! Попробуйте еще раз', 'error');
+                }
+            }
+        }
+
+        // Показать ответ
+        function showAnswer() {
+            showMessage(`Правильный ответ: ${gameState.currentWord.correct}`, 'info');
+            loadNewWord();
+        }
+
+        // Выход из игры
+        function exitGame() {
+            tg.sendData(JSON.stringify({
+                action: 'exit',
+                score: gameState.score
+            }));
+            tg.close();
+        }
+
+        // Вспомогательные функции
+        function updateScoreDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        function showMessage(text, type) {
+            const colors = {
+                success: '#2ecc71',
+                error: '#e74c3c',
+                info: '#3498db'
+            };
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = text;
+            messageDiv.style.color = colors[type];
+            messageDiv.style.margin = '10px 0';
+            messageDiv.style.textAlign = 'center';
+            
+            document.querySelector('.game-container').prepend(messageDiv);
+            setTimeout(() => messageDiv.remove(), 2000);
+        }
+
+        // Стартовое меню
+        document.addEventListener('DOMContentLoaded', () => {
+            tg.MainButton.setText('Выбрать уровень').show();
+            tg.MainButton.onClick(() => {
+                tg.showPopup({
+                    title: 'Выберите уровень',
+                    items: [
+                        { id: 'grade5', type: 'default', text: '5 класс' },
+                        { id: 'grade6', type: 'default', text: '6 класс' }
+                    ]
+                }, (selectedId) => {
+                    initGame(selectedId);
+                    tg.MainButton.hide();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
