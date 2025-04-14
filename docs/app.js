@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
         exitGameBtn: document.getElementById('exitGameBtn')
     };
 
+    if (!elements.levelModal || !elements.gameContainer) {
+        console.error('Critical elements not found!');
+        return;
+      }
+
     // Инициализация игры
     function initGame(grade) {
         try {
