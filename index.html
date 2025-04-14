@@ -8,77 +8,218 @@
     <style>
         /* Базовые стили */
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #a6a6a6;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            box-sizing: border-box;
-            opacity: 0;
-            animation: fadeIn 0.5s 0.3s ease-out forwards;
-        }
-    
-        /* Уровень 1: Фон и базовый контейнер */
-        .game-container {
-            background: white;
+            margin: 0;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        /* Главный контейнер */
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.95);
+            animation: scaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Заголовок счёта */
+        .score {
+            text-align: center;
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 0 0 30px 0;
+            font-weight: 600;
+            letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeInUp 0.5s 0.3s ease-out forwards;
+        }
+
+        /* Поле с словом */
+        .word-display {
+            font-size: 32px;
+            color: #2c3e50;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(241, 243, 246, 0.5);
+            border-radius: 15px;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeInUp 0.5s 0.4s ease-out forwards;
+        }
+
+        /* Поле ввода */
+        input[type="text"] {
             width: 100%;
-            max-width: 600px;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 15px 25px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            outline: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: inputExpand 0.5s 0.5s ease-out forwards;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3498db;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+            transform: scale(1);
+        }
+
+        /* Кнопки */
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateY(10px);
+            opacity: 0;
+            animation: fadeInUp 0.5s 0.6s ease-out forwards;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Контейнер управления */
+        .controls {
+            margin-top: 30px;
             display: flex;
             flex-direction: column;
+            gap: 15px;
             align-items: center;
-            gap: 20px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s 0.5s ease-out forwards;
         }
-    
-        /* Уровень 2: Основные элементы интерфейса */
-        .word-display,
-        .score,
-        input[type="text"] {
-            opacity: 0;
-            animation: fadeIn 0.5s 1s ease-out forwards;
-        }
-    
-        /* Уровень 3: Кнопки управления */
-        .controls {
-            opacity: 0;
-            animation: fadeIn 0.5s 1.5s ease-out forwards;
-        }
-    
-        /* Уровень 4: Модальное окно */
+
+        /* Модальное окно */
         .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            transform: scale(0.8);
             opacity: 0;
-            animation: fadeIn 0.3s 2s ease-out forwards;
+            animation: modalAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-    
-        /* Анимации */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+
+        .level-btn {
+            margin: 10px 0;
+            width: 200px;
+            background: #f8f9fa;
+            color: #2c3e50;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
         }
-    
+
+        .level-btn:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* Сообщения */
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: 500;
+            z-index: 1001;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            opacity: 0;
+            animation: messageAppear 0.4s ease-out;
+        }
+
+    /* Анимации */
+        @keyframes scaleUp {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes inputExpand {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes modalAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes messageAppear {
+            0% { opacity: 0; transform: translate(-50%, -40%); }
+            100% { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* Адаптация под мобильные */
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+                border-radius: 15px;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        
+            .word-display {
+                font-size: 24px;
+                padding: 15px;
+            }
+        
+            input[type="text"] {
+                width: 100%;
+                padding: 12px 20px;
             }
         }
-    
-        /* Остальные стили без изменений */
-        /* ... */
     </style>
+    
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
