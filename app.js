@@ -7,8 +7,9 @@ const gameConfig = {
         grade5: [
             { wrong: "програма", correct: "программа" },
             { wrong: "искуство", correct: "искусство" },
-            { wrong: "алфавит", correct: "алфавит" },
-            { wrong: "балон", correct: "балон" }
+            { wrong: "алфовит", correct: "алфавит" },
+            { wrong: "баллон", correct: "балон" },
+            { wrong: "Шэстакович", correct: "Шостакович" }, // { wrong: "" , correct: "" }
         ],
         grade6: [
             { wrong: "симетрия", correct: "симметрия" },
