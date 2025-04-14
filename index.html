@@ -4,9 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игра "Найди ошибку"</title>
-    <link rel="stylesheet" href="styles.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="app.js" defer></script>
+    <style>
+        /* Стили */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .word-display {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .score {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            width: 100%;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 18px;
+            margin: 10px 0;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+            width: 200px;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .level-btn {
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            width: 200px;
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            z-index: 1001;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .game-container { gap: 15px; padding: 15px; }
+            button { width: 100%; }
+            input[type="text"] { width: 95%; }
+            .controls { flex-direction: column; gap: 10px; }
+        }
+    </style>
 </head>
 <body>
     <div id="levelModal" class="modal">
@@ -20,16 +167,144 @@
     <div class="game-container" style="display: none;">
         <div class="score">Счет: <span id="score">0</span></div>
         <div class="word-display" id="wordDisplay"></div>
-        
         <input type="text" id="answerInput" placeholder="Введите правильный вариант">
         <button id="checkAnswerBtn">Проверить</button>
-        
         <div class="controls">
             <button id="showAnswerBtn">Показать ответ</button>
             <button id="exitGameBtn">Выйти</button>
         </div>
     </div>
-
     <div id="message" class="message"></div>
+
+    <script>
+        // Конфигурация и логика
+        const gameConfig = {
+            words: {
+                grade5: [
+                    { wrong: "програма", correct: "программа" },
+                    { wrong: "искуство", correct: "искусство" },
+                    { wrong: "алфавит", correct: "алфавит" },
+                    { wrong: "балон", correct: "балон" }
+                ],
+                grade6: [
+                    { wrong: "симетрия", correct: "симметрия" },
+                    { wrong: "аккумулировать", correct: "аккумулировать" },
+                    { wrong: "диллема", correct: "дилема" },
+                    { wrong: "интелект", correct: "интеллект" }
+                ]
+            }
+        };
+
+        let gameState = {
+            currentGrade: null,
+            currentWord: null,
+            attempts: 0,
+            score: 0
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isTelegram = typeof window.Telegram !== 'undefined' && window.Telegram.WebApp;
+            const tg = isTelegram ? window.Telegram.WebApp : null;
+            
+            const elements = {
+                levelModal: document.getElementById('levelModal'),
+                gameContainer: document.querySelector('.game-container'),
+                wordDisplay: document.getElementById('wordDisplay'),
+                answerInput: document.getElementById('answerInput'),
+                scoreDisplay: document.getElementById('score'),
+                message: document.getElementById('message'),
+                levelButtons: document.querySelectorAll('.level-btn'),
+                checkAnswerBtn: document.getElementById('checkAnswerBtn'),
+                showAnswerBtn: document.getElementById('showAnswerBtn'),
+                exitGameBtn: document.getElementById('exitGameBtn')
+            };
+
+            if (!elements.levelModal || !elements.gameContainer) {
+                console.error('Важные элементы не найдены!');
+                return;
+            }
+
+            function initGame(grade) {
+                gameState = { currentGrade: grade, currentWord: null, attempts: 0, score: 0 };
+                elements.levelModal.style.display = 'none';
+                elements.gameContainer.style.display = 'block';
+                loadNewWord();
+                if(isTelegram) tg.MainButton.hide();
+            }
+
+            function loadNewWord() {
+                const wordsList = gameConfig.words[gameState.currentGrade];
+                gameState.currentWord = wordsList[Math.floor(Math.random() * wordsList.length)];
+                elements.wordDisplay.textContent = gameState.currentWord.wrong;
+                elements.answerInput.value = '';
+                elements.answerInput.focus();
+            }
+
+            function checkAnswer() {
+                const userAnswer = elements.answerInput.value.trim().toLowerCase();
+                const correctAnswer = gameState.currentWord.correct.toLowerCase();
+                
+                if(!userAnswer) return showMessage('Введите ответ!', 'error');
+                
+                if(userAnswer === correctAnswer) {
+                    gameState.score++;
+                    updateScore();
+                    showMessage('Правильно! +1 балл', 'success');
+                    loadNewWord();
+                } else {
+                    gameState.attempts++;
+                    gameState.attempts >= 2 ? showAnswer() : showMessage('Неверно! Попробуйте еще раз', 'error');
+                }
+            }
+
+            function showAnswer() {
+                showMessage(`Правильный ответ: ${gameState.currentWord.correct}`, 'info');
+                loadNewWord();
+            }
+
+            function exitGame() {
+                if(isTelegram) {
+                    tg.sendData(JSON.stringify({ action: 'exit', score: gameState.score }));
+                    tg.close();
+                } else {
+                    alert(`Игра завершена!\nВаш счет: ${gameState.score}`);
+                    window.location.reload();
+                }
+            }
+
+            function updateScore() {
+                elements.scoreDisplay.textContent = gameState.score;
+            }
+
+            function showMessage(text, type) {
+                elements.message.className = `message ${type}`;
+                elements.message.textContent = text;
+                elements.message.style.display = 'block';
+                setTimeout(() => elements.message.style.display = 'none', 2000);
+            }
+
+            if(isTelegram) {
+                tg.expand();
+                tg.MainButton.setText('Выбрать уровень').show();
+                tg.MainButton.onClick(() => {
+                    tg.showPopup({
+                        title: 'Выберите уровень',
+                        items: [
+                            { id: 'grade5', type: 'default', text: '5 класс' },
+                            { id: 'grade6', type: 'default', text: '6 класс' }
+                        ]
+                    }, (selectedId) => initGame(selectedId));
+                });
+            } else {
+                elements.levelModal.style.display = 'flex';
+            }
+
+            elements.levelButtons.forEach(btn => btn.addEventListener('click', () => initGame(btn.dataset.grade)));
+            elements.checkAnswerBtn.addEventListener('click', checkAnswer);
+            elements.showAnswerBtn.addEventListener('click', showAnswer);
+            elements.exitGameBtn.addEventListener('click', exitGame);
+            elements.answerInput.addEventListener('keypress', e => e.key === 'Enter' && checkAnswer());
+        });
+    </script>
 </body>
 </html>
