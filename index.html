@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игра "Найди ошибку"</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -173,9 +175,18 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             opacity: 0;
             animation: messageAppear 0.4s ease-out;
+            
         }
 
-    /* Анимации */
+        .ad-container {
+            margin: 30px auto 0;
+            padding: 20px;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeIn 0.5s 1s ease-out forwards;
+        }
+
+        /* Анимации */
         @keyframes scaleUp {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
@@ -200,9 +211,22 @@
             0% { opacity: 0; transform: translate(-50%, -40%); }
             100% { opacity: 1; transform: translate(-50%, -50%); }
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* Адаптация под мобильные */
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            .ad-container {
+                padding: 10px;
+                margin-top: 20px;
+            }
+            
+            #yandex_rtb_R-A-15114405-1 {
+                overflow: hidden;
+                max-width: 100%;
+            }
             .game-container {
                 padding: 20px;
                 border-radius: 15px;
@@ -218,6 +242,8 @@
                 padding: 12px 20px;
             }
         }
+
+        
     </style>
     
     
@@ -418,6 +444,15 @@
             elements.exitGameBtn.addEventListener('click', exitGame);
             elements.answerInput.addEventListener('keypress', e => e.key === 'Enter' && checkAnswer());
         });
+    </script>
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-15114405-1",
+                "renderTo": "yandex_rtb_R-A-15114405-1", 
+                "type": "feed"
+            })
+        })
     </script>
 </body>
 </html>
